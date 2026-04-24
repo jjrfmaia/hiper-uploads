@@ -677,12 +677,16 @@
 
 <!-- ════════════════════════ SCRIPT ════════════════════════ -->
 <script>
-const SUPA_URL = 'https://zgqovmtiyvoocowbznth.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncW92bXRpeXZvb2Nvd2J6bnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODk4MDgsImV4cCI6MjA5MjU2NTgwOH0.3Mnx6IuwRLjwU8B_3gakJD3VYWkWb0_gx8N8UM4Hdh0';//  SUPABASE CLIENT (lightweight fetch-based)
 // ═══════════════════════════════════════════════════════════
-let SUPA_URL = localStorage.getItem('supa_url') || '';
-let SUPA_KEY = localStorage.getItem('supa_key') || '';
+//  SUPABASE CLIENT (DADOS FIXOS)
+// ═══════════════════════════════════════════════════════════
+const SUPA_URL = 'https://zgqovmtiyvoocowbznth.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncW92bXRpeXZvb2Nvd2J6bnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODk4MDgsImV4cCI6MjA5MjU2NTgwOH0.3Mnx6IuwRLjwU8B_3gakJD3VYWkWb0_gx8N8UM4Hdh0';
+
 let authToken = localStorage.getItem('auth_token') || null;
+let currentUser = null;
+let currentFolder = null;
+let fileToDelete = null;
 let currentUser = null;
 let currentFolder = null;
 let fileToDelete = null;
@@ -700,7 +704,7 @@ function supaHeaders(extra = {}) {
 }
 
 async function supaFetch(path, options = {}) {
-  // Ignora o localStorage e usa apenas as constantes acima
+  // Usa as constantes fixas do topo do arquivo
   const urlBase = SUPA_URL.replace(/\/$/, '');
   const cleanPath = path.startsWith('/') ? path : '/' + path;
   const fullUrl = urlBase + cleanPath;
@@ -895,24 +899,17 @@ function showLoginWithConfigPrompt() {
 }
 
 function showApp() {
+  // Esconde o login e mostra o app
   document.getElementById('section-login').style.display = 'none';
   document.getElementById('section-app').style.display = 'block';
   document.getElementById('section-share').style.display = 'none';
 
+  // Define o nome do usuário
   document.getElementById('user-email-display').textContent = 'suporte';
 
-  if (!SUPA_URL || !SUPA_KEY) {
-    document.getElementById('config-notice').innerHTML = `
-      <div class="setup-banner">
-        <h3>⚠️ Supabase não configurado</h3>
-        <p>Configure suas credenciais para ativar o sistema de armazenamento.</p>
-        <p>Você precisa criar as tabelas <code>folders</code> e <code>files</code> e o bucket <code>hiper-uploads</code>.</p>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modal-config')">⚙️ Configurar agora</button>
-      </div>`;
-  } else {
-    document.getElementById('config-notice').innerHTML = '';
-    loadDashboard();
-  }
+  // Limpa qualquer aviso de configuração e carrega os dados direto
+  document.getElementById('config-notice').innerHTML = '';
+  loadDashboard();
 }
 
 // ═══════════════════════════════════════════════════════════
