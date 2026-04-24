@@ -692,9 +692,9 @@ function supaHeaders(extra = {}) {
   const h = {
     'Content-Type': 'application/json',
     'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
     ...extra
   };
-  if (authToken) h['Authorization'] = `Bearer ${authToken}`;
   return h;
 }
 
@@ -773,7 +773,7 @@ async function supaUpload(bucket, path, file, onProgress) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${SUPA_URL}/storage/v1/object/${bucket}/${path}`);
     xhr.setRequestHeader('apikey', SUPA_KEY);
-    xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+    xhr.setRequestHeader('Authorization', `Bearer ${SUPA_KEY}`);
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
     xhr.setRequestHeader('x-upsert', 'true');
     if (onProgress) {
