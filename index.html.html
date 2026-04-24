@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiper Uploads — Suporte Técnico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --border2: #252c3a;
+    --text: #e8eaf0;
+    --text2: #8891a8;
+    --text3: #4d566b;
+    --accent: #a855f7;
+    --accent-dark: #9333ea;
+    --accent-glow: rgba(168,85,247,0.15);
+    --green: #22c55e;
+    --green-dark: #16a34a;
+    --red: #ef4444;
+    --red-dark: #dc2626;
+    --yellow: #f59e0b;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ─── LAYOUT ─── */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-display); font-weight: 800; font-size: 18px;
+    letter-spacing: -0.5px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .user-badge {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 20px;
+    font-size: 13px; color: var(--text2);
+  }
+  .user-dot {
+    width: 8px; height: 8px; background: var(--green);
+    border-radius: 50%;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    font-family: var(--font-display); font-weight: 600; font-size: 13px;
+    cursor: pointer; border: none; transition: all .15s ease;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: var(--green-dark); transform: translateY(-1px); }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-red:hover { background: var(--red-dark); }
+  .btn-ghost {
+    background: transparent; color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+  /* ─── MAIN CONTENT ─── */
+  .main { flex: 1; padding: 32px 28px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* ─── SECTIONS ─── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ─── LOGIN PAGE ─── */
+  #section-login {
+    display: none; align-items: center; justify-content: center;
+    min-height: 100vh; background: var(--bg);
+    position: fixed; inset: 0; z-index: 200;
+    background-image: radial-gradient(ellipse at 50% 40%, rgba(168,85,247,0.08) 0%, transparent 65%);
+  }
+  #section-login.active { display: flex; }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.5), 0 0 60px rgba(168,85,247,.07);
+  }
+  .login-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 22px; margin-bottom: 8px;
+  }
+  .login-logo .logo-icon { width: 38px; height: 38px; font-size: 18px; }
+  .login-sub { color: var(--text2); font-size: 14px; margin-bottom: 36px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .5px; }
+  .form-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: var(--font-display); font-size: 14px;
+    transition: border-color .15s;
+  }
+  .form-input:focus { outline: none; border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+  .login-btn { width: 100%; padding: 12px; font-size: 15px; margin-top: 8px; }
+  .login-divider {
+    text-align: center; color: var(--text3); font-size: 12px;
+    margin: 18px 0; position: relative;
+  }
+  .login-divider::before, .login-divider::after {
+    content: ''; position: absolute; top: 50%; width: 40%; height: 1px;
+    background: var(--border);
+  }
+  .login-divider::before { left: 0; }
+  .login-divider::after { right: 0; }
+  .login-toggle { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text2); }
+  .login-toggle a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .login-toggle a:hover { text-decoration: underline; }
+
+  /* ─── DASHBOARD ─── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .page-title { font-size: 24px; font-weight: 800; }
+  .page-sub { color: var(--text2); font-size: 13px; margin-top: 3px; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+  }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--text3); margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 800; font-family: var(--font-mono); }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.yellow { color: var(--yellow); }
+
+  /* ─── FOLDERS GRID ─── */
+  .folders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .folder-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    cursor: pointer; transition: all .2s ease;
+    position: relative; overflow: hidden;
+  }
+  .folder-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent); opacity: 0; transition: opacity .2s;
+  }
+  .folder-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+  .folder-card:hover::before { opacity: 1; }
+  .folder-card.expiring-soon::before { background: var(--yellow); opacity: 1; }
+  .folder-card.expiring-soon { border-color: rgba(245,158,11,.2); }
+  .folder-icon { font-size: 28px; margin-bottom: 12px; }
+  .folder-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-meta { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+  .folder-footer { display: flex; align-items: center; justify-content: space-between; }
+  .folder-badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); font-family: var(--font-mono);
+  }
+  .folder-badge.warning { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); color: var(--yellow); }
+  .folder-badge.danger { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.3); color: var(--red); }
+  .folder-actions { display: flex; gap: 6px; }
+  .folder-actions .btn { padding: 5px 10px; font-size: 11px; }
+
+  /* ─── FOLDER VIEW ─── */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text2); margin-bottom: 24px;
+  }
+  .breadcrumb a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb-sep { color: var(--text3); }
+
+  .folder-header-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    margin-bottom: 24px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  }
+  .folder-header-info h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .folder-info-row { display: flex; gap: 20px; flex-wrap: wrap; }
+  .info-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text2);
+  }
+  .folder-header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+
+  /* ─── UPLOAD ZONE ─── */
+  .upload-zone {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius); padding: 40px;
+    text-align: center; cursor: pointer;
+    transition: all .2s; margin-bottom: 24px;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent); background: var(--accent-glow);
+  }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-text { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .upload-sub { font-size: 13px; color: var(--text2); }
+
+  /* ─── PROGRESS ─── */
+  .upload-progress-list { margin-bottom: 20px; }
+  .upload-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 8px;
+  }
+  .upload-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .upload-item-name { font-size: 13px; font-weight: 600; }
+  .upload-item-size { font-size: 11px; color: var(--text2); font-family: var(--font-mono); }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+  .progress-fill.done { background: var(--green); }
+  .progress-fill.error { background: var(--red); }
+
+  /* ─── FILES TABLE ─── */
+  .files-table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .files-table { width: 100%; border-collapse: collapse; }
+  .files-table thead th {
+    text-align: left; padding: 13px 18px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--text3); background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .files-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .files-table tbody tr:last-child { border-bottom: none; }
+  .files-table tbody tr:hover { background: var(--surface2); }
+  .files-table td { padding: 13px 18px; font-size: 13px; }
+  .file-name-cell { display: flex; align-items: center; gap: 10px; }
+  .file-ext-badge {
+    font-size: 10px; font-family: var(--font-mono); padding: 2px 6px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 4px; color: var(--text3);
+  }
+  .file-size { font-family: var(--font-mono); color: var(--text2); }
+  .expiry-badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 20px;
+    font-family: var(--font-mono);
+  }
+  .expiry-ok { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: var(--green); }
+  .expiry-warn { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: var(--yellow); }
+  .expiry-crit { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: var(--red); }
+  .td-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+  /* ─── SHARE PAGE ─── */
+  #section-share {
+    background: var(--bg); min-height: 100vh;
+  }
+  .share-container { max-width: 860px; margin: 0 auto; padding: 40px 24px; }
+  .share-banner {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 32px; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .share-banner-icon { font-size: 52px; }
+  .share-banner-info h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .share-banner-meta { color: var(--text2); font-size: 13px; display: flex; gap: 20px; flex-wrap: wrap; }
+  .share-actions { margin-bottom: 24px; }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    display: none; align-items: center; justify-content: center; z-index: 300;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 32px; width: 100%; max-width: 440px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
+  }
+  .modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .modal p { color: var(--text2); font-size: 14px; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ─── SHARE LINK BOX ─── */
+  .share-link-box {
+    display: flex; gap: 8px; align-items: center;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 12px;
+  }
+  .share-link-url {
+    flex: 1; font-family: var(--font-mono); font-size: 12px;
+    color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ─── TOAST ─── */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 500;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    animation: toastIn .3s ease;
+    min-width: 260px; max-width: 360px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+  .toast-success { background: #14532d; border: 1px solid #22c55e; color: #86efac; }
+  .toast-error { background: #450a0a; border: 1px solid #ef4444; color: #fca5a5; }
+  .toast-info { background: #3b0764; border: 1px solid #a855f7; color: #d8b4fe; }
+  .toast-warning { background: #451a03; border: 1px solid #f59e0b; color: #fcd34d; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text3);
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 18px; color: var(--text2); margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── LOADING ─── */
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    display: none; align-items: center; justify-content: center; z-index: 400;
+    flex-direction: column; gap: 12px;
+  }
+  .loading-overlay.show { display: flex; }
+  .loading-overlay span { font-size: 14px; color: var(--text2); }
+
+  /* ─── SETUP BANNER ─── */
+  .setup-banner {
+    background: linear-gradient(90deg, rgba(168,85,247,.1), rgba(168,85,247,.05));
+    border: 1px solid rgba(168,85,247,.3); border-radius: var(--radius);
+    padding: 20px 24px; margin-bottom: 28px;
+  }
+  .setup-banner h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; color: #d8b4fe; }
+  .setup-banner p { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+  .setup-banner code {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--surface); padding: 2px 6px; border-radius: 4px;
+    color: var(--text);
+  }
+  .setup-steps { list-style: none; font-size: 13px; color: var(--text2); }
+  .setup-steps li { padding: 4px 0; padding-left: 20px; position: relative; }
+  .setup-steps li::before { content: '→'; position: absolute; left: 0; color: var(--accent); }
+
+  /* ─── CONFIG SECTION ─── */
+  .config-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px; max-width: 540px;
+  }
+  .config-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    .main { padding: 20px 16px; }
+    .topbar { padding: 0 16px; }
+    .stats-row { grid-template-columns: 1fr; }
+    .folders-grid { grid-template-columns: 1fr; }
+    .folder-header-box { flex-direction: column; }
+    .login-card { padding: 32px 24px; }
+    .files-table thead { display: none; }
+    .files-table tbody tr { display: block; padding: 12px 0; }
+    .files-table td { display: block; padding: 4px 18px; }
+    .td-actions { justify-content: flex-start; margin-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ LOGIN ════════════════════════ -->
+<div id="section-login" class="section active">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://hiper.com.br/wp-content/themes/temahiper/img/hiper.svg?v=1" alt="Hiper" style="height:36px; filter: brightness(0) invert(1);">
+    </div>
+    <p class="login-sub" style="margin-top:10px">Uploads · Sistema interno de suporte técnico</p>
+
+    <div id="login-form-wrap">
+      <div class="form-group">
+        <label class="form-label">Usuário</label>
+        <input class="form-input" type="text" id="login-email" placeholder="usuário" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleLogin()">
+      </div>
+      <button class="btn btn-primary login-btn" onclick="handleLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ MAIN APP ════════════════════════ -->
+<div id="section-app" class="section" style="display:none">
+  <div class="app">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-logo" onclick="showDashboard()" style="cursor:pointer">
+        <img src="https://hiper.com.br/wp-content/themes/temahiper/img/hiper.svg?v=1" alt="Hiper" style="height:26px; filter: brightness(0) invert(1);">
+        <span style="color:var(--text3); font-weight:400; font-size:14px">/ Uploads</span>
+      </div>
+      <div class="topbar-right">
+        <div class="user-badge">
+          <div class="user-dot"></div>
+          <span id="user-email-display">—</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="handleLogout()">Sair</button>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- ── DASHBOARD ── -->
+      <div id="view-dashboard">
+        <div id="config-notice"></div>
+
+        <div class="page-header">
+          <div>
+            <div class="page-title">Pastas</div>
+            <div class="page-sub">Gerencie seus arquivos e compartilhamentos</div>
+          </div>
+          <button class="btn btn-green" onclick="openNewFolderModal()">
+            ＋ Nova pasta
+          </button>
+        </div>
+
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total de pastas</div>
+            <div class="stat-value accent" id="stat-folders">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total de arquivos</div>
+            <div class="stat-value green" id="stat-files">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Expirando em breve</div>
+            <div class="stat-value yellow" id="stat-expiring">0</div>
+          </div>
+        </div>
+
+        <div class="folders-grid" id="folders-grid">
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>Nenhuma pasta ainda</h3>
+            <p>Crie uma pasta para começar a fazer uploads</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FOLDER VIEW ── -->
+      <div id="view-folder" style="display:none">
+        <div class="breadcrumb">
+          <a onclick="showDashboard()">🏠 Início</a>
+          <span class="breadcrumb-sep">/</span>
+          <span id="folder-breadcrumb-name">—</span>
+        </div>
+
+        <div class="folder-header-box">
+          <div class="folder-header-info">
+            <h2 id="folder-view-name">—</h2>
+            <div class="folder-info-row">
+              <div class="info-pill">📅 Criado: <span id="folder-view-created">—</span></div>
+              <div class="info-pill" id="folder-view-expiry-pill">⏳ Expira: <span id="folder-view-expiry">—</span></div>
+            </div>
+          </div>
+          <div class="folder-header-actions">
+            <button class="btn btn-ghost btn-sm" onclick="copyShareLink()">🔗 Copiar link</button>
+            <button class="btn btn-primary btn-sm" onclick="downloadAll()">⬇ Baixar tudo</button>
+            <button class="btn btn-red btn-sm" onclick="confirmDeleteFolder()">🗑 Excluir pasta</button>
+          </div>
+        </div>
+
+        <!-- UPLOAD ZONE -->
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="file-input" multiple onchange="handleFiles(this.files)">
+          <div class="upload-icon">☁</div>
+          <div class="upload-text">Arraste arquivos aqui ou clique para selecionar</div>
+          <div class="upload-sub">Múltiplos arquivos suportados • Expira em 24h após o upload</div>
+        </div>
+
+        <div id="upload-progress-list" class="upload-progress-list"></div>
+
+        <div id="files-table-container">
+          <div class="empty-state" id="files-empty">
+            <div class="empty-icon">📄</div>
+            <h3>Nenhum arquivo ainda</h3>
+            <p>Faça upload dos seus arquivos acima</p>
+          </div>
+          <div class="files-table-wrap" id="files-table-wrap" style="display:none">
+            <table class="files-table">
+              <thead>
+                <tr>
+                  <th>Arquivo</th>
+                  <th>Tamanho</th>
+                  <th>Expiração</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="files-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════════════ SHARE PAGE ════════════════════════ -->
+<div id="section-share" class="section" style="display:none">
+  <div class="share-container">
+    <div class="topbar-logo" style="margin-bottom:28px; font-size:16px">
+      <img src="https://hiper.com.br/wp-content/themes/temahiper/img/hiper.svg?v=1" alt="Hiper" style="height:24px; filter: brightness(0) invert(1);">
+      <span style="color:var(--text3); font-weight:400; font-size:13px">/ Uploads</span>
+    </div>
+
+    <div class="share-banner">
+      <div class="share-banner-icon">📁</div>
+      <div class="share-banner-info">
+        <h1 id="share-folder-name">—</h1>
+        <div class="share-banner-meta">
+          <span id="share-file-count">0 arquivos</span>
+          <span id="share-expiry">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="share-actions">
+      <button class="btn btn-primary" onclick="shareDownloadAll()">⬇ Baixar todos os arquivos</button>
+    </div>
+
+    <div id="share-files-table-wrap" class="files-table-wrap">
+      <table class="files-table">
+        <thead>
+          <tr>
+            <th>Arquivo</th>
+            <th>Tamanho</th>
+            <th style="text-align:right">Download</th>
+          </tr>
+        </thead>
+        <tbody id="share-files-tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="share-empty" class="empty-state" style="display:none">
+      <div class="empty-icon">📭</div>
+      <h3>Pasta vazia ou expirada</h3>
+      <p>Esta pasta não contém arquivos ou já expirou</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════ MODALS ════════════════════════ -->
+<!-- New Folder -->
+<div class="modal-overlay" id="modal-new-folder">
+  <div class="modal">
+    <h3>📁 Nova Pasta</h3>
+    <p>A pasta expira automaticamente em 48 horas após a criação.</p>
+    <div class="form-group">
+      <label class="form-label">Nome da pasta</label>
+      <input class="form-input" type="text" id="new-folder-name" placeholder="Ex: Ticket #1234 – Cliente XYZ" onkeydown="if(event.key==='Enter') createFolder()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-new-folder')">Cancelar</button>
+      <button class="btn btn-green" onclick="createFolder()">Criar pasta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Folder -->
+<div class="modal-overlay" id="modal-confirm-folder-delete">
+  <div class="modal">
+    <h3>🗑 Excluir pasta?</h3>
+    <p>Todos os arquivos dentro da pasta serão permanentemente removidos. Esta ação não pode ser desfeita.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm-folder-delete')">Cancelar</button>
+      <button class="btn btn-red" onclick="deleteFolder()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete File -->
+<div class="modal-overlay" id="modal-confirm-file-delete">
+  <div class="modal">
+    <h3>🗑 Excluir arquivo?</h3>
+    <p id="modal-delete-file-name" style="color:var(--text)"></p>
+    <p>Este arquivo será permanentemente removido.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm-file-delete')">Cancelar</button>
+      <button class="btn btn-red" onclick="deleteFile()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup Config -->
+<div class="modal-overlay" id="modal-config">
+  <div class="modal" style="max-width:520px">
+    <h3>⚙️ Configurar Supabase</h3>
+    <p>Insira as credenciais do seu projeto Supabase para ativar o sistema.</p>
+    <div class="form-group">
+      <label class="form-label">URL do Projeto</label>
+      <input class="form-input" type="text" id="config-url" placeholder="https://xyzxyz.supabase.co">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Anon Key</label>
+      <input class="form-input" type="text" id="config-key" placeholder="eyJhbGci...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" onclick="saveConfig()">Salvar e conectar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <span id="loading-text">Carregando...</span>
+</div>
+
+<!-- ════════════════════════ SCRIPT ════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SUPABASE CLIENT (lightweight fetch-based)
+// ═══════════════════════════════════════════════════════════
+let SUPA_URL = localStorage.getItem('supa_url') || '';
+let SUPA_KEY = localStorage.getItem('supa_key') || '';
+let authToken = localStorage.getItem('auth_token') || null;
+let currentUser = null;
+let currentFolder = null;
+let fileToDelete = null;
+
+// ─── Supabase helpers ───
+function supaHeaders(extra = {}) {
+  const h = {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    ...extra
+  };
+  if (authToken) h['Authorization'] = `Bearer ${authToken}`;
+  return h;
+}
+
+async function supaFetch(path, options = {}) {
+  if (!SUPA_URL) throw new Error('SUPA_NOT_CONFIGURED');
+  const url = SUPA_URL + path;
+  const res = await fetch(url, {
+    headers: supaHeaders(options.headers || {}),
+    ...options
+  });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  if (!res.ok) throw new Error(data.message || data.error_description || data.msg || `HTTP ${res.status}`);
+  return data;
+}
+
+async function supaQuery(table, params = '') {
+  return supaFetch(`/rest/v1/${table}?${params}`, { method: 'GET' });
+}
+
+async function supaInsert(table, body) {
+  return supaFetch(`/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { 'Prefer': 'return=representation' },
+    body: JSON.stringify(body)
+  });
+}
+
+async function supaDelete(table, query) {
+  return supaFetch(`/rest/v1/${table}?${query}`, { method: 'DELETE' });
+}
+
+// ─── Auth ───
+async function supaSignIn(email, password) {
+  const data = await supaFetch('/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+  authToken = data.access_token;
+  localStorage.setItem('auth_token', authToken);
+  currentUser = data.user;
+  return data;
+}
+
+async function supaSignUp(email, password) {
+  const data = await supaFetch('/auth/v1/signup', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+  if (data.access_token) {
+    authToken = data.access_token;
+    localStorage.setItem('auth_token', authToken);
+    currentUser = data.user;
+  }
+  return data;
+}
+
+async function supaGetUser() {
+  if (!authToken) return null;
+  try {
+    return await supaFetch('/auth/v1/user', { method: 'GET' });
+  } catch { return null; }
+}
+
+async function supaSignOut() {
+  try { await supaFetch('/auth/v1/logout', { method: 'POST' }); } catch {}
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('auth_token');
+}
+
+// ─── Storage ───
+async function supaUpload(bucket, path, file, onProgress) {
+  if (!SUPA_URL) throw new Error('SUPA_NOT_CONFIGURED');
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${SUPA_URL}/storage/v1/object/${bucket}/${path}`);
+    xhr.setRequestHeader('apikey', SUPA_KEY);
+    xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.setRequestHeader('x-upsert', 'true');
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
+      });
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
+      else reject(new Error(`Upload falhou: ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error('Erro de rede no upload'));
+    xhr.send(file);
+  });
+}
+
+function supaPublicUrl(bucket, path) {
+  return `${SUPA_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
+
+async function supaDeleteFile(bucket, path) {
+  return supaFetch(`/storage/v1/object/${bucket}/${path}`, { method: 'DELETE' });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  el.innerHTML = `<span>${icons[type]||'•'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function loading(show, text = 'Carregando...') {
+  const el = document.getElementById('loading-overlay');
+  document.getElementById('loading-text').textContent = text;
+  el.classList.toggle('show', show);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function formatBytes(bytes) {
+  if (!bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function timeRemaining(expiresAt) {
+  const now = Date.now();
+  const exp = new Date(expiresAt).getTime();
+  const diff = exp - now;
+  if (diff <= 0) return { text: 'Expirado', cls: 'expiry-crit' };
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (h < 2) return { text: `${h}h ${m}m`, cls: 'expiry-crit' };
+  if (h < 6) return { text: `${h}h ${m}m`, cls: 'expiry-warn' };
+  return { text: `${h}h ${m}m`, cls: 'expiry-ok' };
+}
+
+function getFileExt(name) {
+  const parts = name.split('.');
+  return parts.length > 1 ? parts.pop().toUpperCase() : 'FILE';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  APP INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  // Check if it's a share page
+  if (location.hash.startsWith('#/share/')) {
+    const folderId = location.hash.replace('#/share/', '');
+    showSharePage(folderId);
+    return;
+  }
+
+  // Check local session
+  if (localStorage.getItem('hiper_session') === '1') {
+    currentUser = { id: 'suporte', email: 'suporte' };
+    showApp();
+    return;
+  }
+
+  showLogin();
+});
+
+function showLogin() {
+  document.getElementById('section-login').style.display = 'flex';
+  document.getElementById('section-app').style.display = 'none';
+  document.getElementById('section-share').style.display = 'none';
+}
+
+function showLoginWithConfigPrompt() {
+  showLogin();
+}
+
+function showApp() {
+  document.getElementById('section-login').style.display = 'none';
+  document.getElementById('section-app').style.display = 'block';
+  document.getElementById('section-share').style.display = 'none';
+
+  document.getElementById('user-email-display').textContent = 'suporte';
+
+  if (!SUPA_URL || !SUPA_KEY) {
+    document.getElementById('config-notice').innerHTML = `
+      <div class="setup-banner">
+        <h3>⚠️ Supabase não configurado</h3>
+        <p>Configure suas credenciais para ativar o sistema de armazenamento.</p>
+        <p>Você precisa criar as tabelas <code>folders</code> e <code>files</code> e o bucket <code>hiper-uploads</code>.</p>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-config')">⚙️ Configurar agora</button>
+      </div>`;
+  } else {
+    document.getElementById('config-notice').innerHTML = '';
+    loadDashboard();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════
+async function handleLogin() {
+  const user = document.getElementById('login-email').value.trim().toLowerCase();
+  const pwd = document.getElementById('login-password').value;
+  if (!user || !pwd) { toast('Preencha usuário e senha', 'warning'); return; }
+  if (user !== 'suporte' || pwd !== 'hiper123') {
+    toast('Usuário ou senha incorretos', 'error');
+    document.getElementById('login-password').value = '';
+    return;
+  }
+  currentUser = { id: 'suporte', email: 'suporte' };
+  localStorage.setItem('hiper_session', '1');
+  localStorage.setItem('user_email', 'suporte');
+  toast('Bem-vindo ao Hiper Uploads!', 'success');
+  showApp();
+}
+
+async function handleLogout() {
+  currentUser = null;
+  authToken = null;
+  localStorage.removeItem('hiper_session');
+  localStorage.removeItem('auth_token');
+  showLogin();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════
+function saveConfig() {
+  const url = document.getElementById('config-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('config-key').value.trim();
+  if (!url || !key) { toast('Preencha URL e Anon Key', 'warning'); return; }
+  SUPA_URL = url;
+  SUPA_KEY = key;
+  localStorage.setItem('supa_url', url);
+  localStorage.setItem('supa_key', key);
+  closeModal('modal-config');
+  toast('Supabase configurado!', 'success');
+  document.getElementById('config-notice').innerHTML = '';
+  if (currentUser) loadDashboard();
+  else showLogin();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════
+async function loadDashboard() {
+  showDashboard();
+  loading(true, 'Carregando pastas...');
+  try {
+    const userId = currentUser?.id;
+    const folders = await supaQuery('folders', `user_id=eq.${userId}&order=created_at.desc`);
+    const files = await supaQuery('files', `order=created_at.desc`);
+
+    // cleanup expired
+    await cleanExpired(folders, files);
+
+    // Reload after cleanup
+    const freshFolders = await supaQuery('folders', `user_id=eq.${userId}&order=created_at.desc`);
+    const freshFiles = await supaQuery('files', `order=created_at.desc`);
+
+    renderDashboard(freshFolders, freshFiles);
+  } catch (e) {
+    if (e.message === 'SUPA_NOT_CONFIGURED') {
+      toast('Configure o Supabase primeiro', 'warning');
+    } else {
+      toast('Erro ao carregar: ' + e.message, 'error');
+    }
+  } finally { loading(false); }
+}
+
+async function cleanExpired(folders, files) {
+  const now = new Date().toISOString();
+  for (const f of files) {
+    if (f.expires_at && f.expires_at < now) {
+      try {
+        await supaDeleteFile('hiper-uploads', f.file_path);
+        await supaDelete('files', `id=eq.${f.id}`);
+      } catch {}
+    }
+  }
+  for (const folder of folders) {
+    if (folder.expires_at && folder.expires_at < now) {
+      try {
+        await supaDelete('folders', `id=eq.${folder.id}`);
+      } catch {}
+    }
+  }
+}
+
+function renderDashboard(folders, files) {
+  const now = Date.now();
+  let expiring = 0;
+  let totalFiles = files.length;
+
+  const grid = document.getElementById('folders-grid');
+
+  document.getElementById('stat-folders').textContent = folders.length;
+  document.getElementById('stat-files').textContent = totalFiles;
+
+  if (!folders.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">📂</div>
+      <h3>Nenhuma pasta ainda</h3>
+      <p>Crie uma pasta para começar a fazer uploads</p>
+    </div>`;
+    document.getElementById('stat-expiring').textContent = 0;
+    return;
+  }
+
+  grid.innerHTML = '';
+  for (const folder of folders) {
+    const folderFiles = files.filter(f => f.folder_id === folder.id);
+    const tr = timeRemaining(folder.expires_at);
+    const isWarn = tr.cls !== 'expiry-ok';
+    if (isWarn) expiring++;
+
+    const card = document.createElement('div');
+    card.className = `folder-card${isWarn ? ' expiring-soon' : ''}`;
+    card.innerHTML = `
+      <div class="folder-icon">📁</div>
+      <div class="folder-name" title="${esc(folder.name)}">${esc(folder.name)}</div>
+      <div class="folder-meta">${folderFiles.length} arquivo${folderFiles.length !== 1 ? 's' : ''} · Criado ${formatDate(folder.created_at)}</div>
+      <div class="folder-footer">
+        <span class="folder-badge ${tr.cls}">⏳ ${tr.text}</span>
+        <div class="folder-actions">
+          <button class="btn btn-primary btn-sm" onclick="openFolder('${folder.id}'); event.stopPropagation()">Abrir</button>
+          <button class="btn btn-red btn-sm" onclick="promptDeleteFolder('${folder.id}'); event.stopPropagation()">🗑</button>
+        </div>
+      </div>`;
+    card.addEventListener('click', () => openFolder(folder.id));
+    grid.appendChild(card);
+  }
+
+  document.getElementById('stat-expiring').textContent = expiring;
+}
+
+function showDashboard() {
+  document.getElementById('view-dashboard').style.display = 'block';
+  document.getElementById('view-folder').style.display = 'none';
+  currentFolder = null;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FOLDER CRUD
+// ═══════════════════════════════════════════════════════════
+function openNewFolderModal() {
+  document.getElementById('new-folder-name').value = '';
+  openModal('modal-new-folder');
+  setTimeout(() => document.getElementById('new-folder-name').focus(), 100);
+}
+
+async function createFolder() {
+  const name = document.getElementById('new-folder-name').value.trim();
+  if (!name) { toast('Informe um nome para a pasta', 'warning'); return; }
+  closeModal('modal-new-folder');
+  loading(true, 'Criando pasta...');
+  try {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 48 * 3600000).toISOString();
+    await supaInsert('folders', {
+      name,
+      user_id: currentUser.id,
+      created_at: now.toISOString(),
+      expires_at: expiresAt
+    });
+    toast(`Pasta "${name}" criada! Expira em 48h.`, 'success');
+    loadDashboard();
+  } catch (e) {
+    toast('Erro ao criar pasta: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+let folderIdToDelete = null;
+
+function promptDeleteFolder(folderId) {
+  folderIdToDelete = folderId;
+  openModal('modal-confirm-folder-delete');
+}
+
+function confirmDeleteFolder() {
+  if (!currentFolder) return;
+  folderIdToDelete = currentFolder.id;
+  openModal('modal-confirm-folder-delete');
+}
+
+async function deleteFolder() {
+  if (!folderIdToDelete) return;
+  closeModal('modal-confirm-folder-delete');
+  loading(true, 'Excluindo pasta...');
+  try {
+    // Delete all files in folder
+    const files = await supaQuery('files', `folder_id=eq.${folderIdToDelete}`);
+    for (const f of files) {
+      try { await supaDeleteFile('hiper-uploads', f.file_path); } catch {}
+      await supaDelete('files', `id=eq.${f.id}`);
+    }
+    await supaDelete('folders', `id=eq.${folderIdToDelete}`);
+    toast('Pasta excluída com sucesso', 'success');
+    folderIdToDelete = null;
+    showDashboard();
+    loadDashboard();
+  } catch (e) {
+    toast('Erro ao excluir: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FOLDER VIEW
+// ═══════════════════════════════════════════════════════════
+async function openFolder(folderId) {
+  loading(true, 'Abrindo pasta...');
+  try {
+    const folders = await supaQuery('folders', `id=eq.${folderId}`);
+    if (!folders.length) { toast('Pasta não encontrada', 'error'); loading(false); return; }
+    currentFolder = folders[0];
+
+    document.getElementById('view-dashboard').style.display = 'none';
+    document.getElementById('view-folder').style.display = 'block';
+
+    document.getElementById('folder-breadcrumb-name').textContent = currentFolder.name;
+    document.getElementById('folder-view-name').textContent = currentFolder.name;
+    document.getElementById('folder-view-created').textContent = formatDate(currentFolder.created_at);
+
+    const tr = timeRemaining(currentFolder.expires_at);
+    document.getElementById('folder-view-expiry').textContent = tr.text;
+
+    document.getElementById('upload-progress-list').innerHTML = '';
+    await loadFiles();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+async function loadFiles() {
+  if (!currentFolder) return;
+  const files = await supaQuery('files', `folder_id=eq.${currentFolder.id}&order=created_at.desc`);
+  renderFiles(files);
+}
+
+function renderFiles(files) {
+  const empty = document.getElementById('files-empty');
+  const wrap = document.getElementById('files-table-wrap');
+  const tbody = document.getElementById('files-tbody');
+
+  if (!files.length) {
+    empty.style.display = 'block';
+    wrap.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  wrap.style.display = 'block';
+  tbody.innerHTML = '';
+
+  for (const f of files) {
+    const tr2 = timeRemaining(f.expires_at);
+    const ext = getFileExt(f.name);
+    const url = supaPublicUrl('hiper-uploads', f.file_path);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>
+        <div class="file-name-cell">
+          <span class="file-ext-badge">${esc(ext)}</span>
+          <span>${esc(f.name)}</span>
+        </div>
+      </td>
+      <td><span class="file-size">${formatBytes(f.size)}</span></td>
+      <td><span class="expiry-badge ${tr2.cls}">${tr2.text}</span></td>
+      <td>
+        <div class="td-actions">
+          <a href="${url}" target="_blank" download="${esc(f.name)}">
+            <button class="btn btn-primary btn-sm">⬇ Download</button>
+          </a>
+          <button class="btn btn-red btn-sm" onclick="promptDeleteFile('${f.id}', '${esc(f.name)}', '${f.file_path}')">🗑</button>
+        </div>
+      </td>`;
+    tbody.appendChild(row);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UPLOAD
+// ═══════════════════════════════════════════════════════════
+const uploadZone = document.getElementById('upload-zone');
+if (uploadZone) {
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+  });
+}
+
+function handleFiles(files) {
+  if (!currentFolder) return;
+  Array.from(files).forEach(uploadFile);
+}
+
+async function uploadFile(file) {
+  const listEl = document.getElementById('upload-progress-list');
+  const itemId = `up-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  const item = document.createElement('div');
+  item.className = 'upload-item';
+  item.id = itemId;
+  item.innerHTML = `
+    <div class="upload-item-top">
+      <span class="upload-item-name">${esc(file.name)}</span>
+      <span class="upload-item-size">${formatBytes(file.size)}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="${itemId}-fill" style="width:0%"></div></div>`;
+  listEl.appendChild(item);
+
+  const fill = document.getElementById(`${itemId}-fill`);
+
+  try {
+    const path = `${currentFolder.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+    await supaUpload('hiper-uploads', path, file, (pct) => {
+      fill.style.width = pct + '%';
+    });
+
+    fill.style.width = '100%';
+    fill.classList.add('done');
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 24 * 3600000).toISOString();
+
+    await supaInsert('files', {
+      folder_id: currentFolder.id,
+      name: file.name,
+      file_path: path,
+      size: file.size,
+      created_at: now.toISOString(),
+      expires_at: expiresAt
+    });
+
+    toast(`"${file.name}" enviado com sucesso!`, 'success');
+    setTimeout(() => item.remove(), 3000);
+    await loadFiles();
+  } catch (e) {
+    fill.classList.add('error');
+    fill.style.width = '100%';
+    toast(`Erro ao enviar "${file.name}": ${e.message}`, 'error');
+    setTimeout(() => item.remove(), 5000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FILE DELETE
+// ═══════════════════════════════════════════════════════════
+let fileToDeleteData = null;
+
+function promptDeleteFile(fileId, fileName, filePath) {
+  fileToDeleteData = { id: fileId, name: fileName, path: filePath };
+  document.getElementById('modal-delete-file-name').textContent = `"${fileName}"`;
+  openModal('modal-confirm-file-delete');
+}
+
+async function deleteFile() {
+  if (!fileToDeleteData) return;
+  closeModal('modal-confirm-file-delete');
+  loading(true, 'Excluindo arquivo...');
+  try {
+    await supaDeleteFile('hiper-uploads', fileToDeleteData.path);
+    await supaDelete('files', `id=eq.${fileToDeleteData.id}`);
+    toast(`"${fileToDeleteData.name}" excluído`, 'success');
+    fileToDeleteData = null;
+    await loadFiles();
+  } catch (e) {
+    toast('Erro ao excluir: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SHARE
+// ═══════════════════════════════════════════════════════════
+function copyShareLink() {
+  if (!currentFolder) return;
+  const url = `${location.origin}${location.pathname}#/share/${currentFolder.id}`;
+  navigator.clipboard.writeText(url).then(() => {
+    toast('Link copiado!', 'success');
+  }).catch(() => {
+    prompt('Copie o link abaixo:', url);
+  });
+}
+
+async function showSharePage(folderId) {
+  document.getElementById('section-login').style.display = 'none';
+  document.getElementById('section-app').style.display = 'none';
+  document.getElementById('section-share').style.display = 'block';
+
+  if (!SUPA_URL || !SUPA_KEY) {
+    toast('Supabase não configurado para visualização pública', 'warning');
+    return;
+  }
+
+  loading(true, 'Carregando pasta...');
+  try {
+    const folders = await supaQuery('folders', `id=eq.${folderId}`);
+    if (!folders.length) {
+      document.getElementById('share-folder-name').textContent = 'Pasta não encontrada ou expirada';
+      document.getElementById('share-empty').style.display = 'block';
+      document.getElementById('share-files-table-wrap').style.display = 'none';
+      return;
+    }
+    const folder = folders[0];
+    const tr = timeRemaining(folder.expires_at);
+
+    document.getElementById('share-folder-name').textContent = folder.name;
+    document.getElementById('share-expiry').textContent = `Expira em: ${tr.text}`;
+
+    const files = await supaQuery('files', `folder_id=eq.${folderId}&order=created_at.desc`);
+
+    document.getElementById('share-file-count').textContent = `${files.length} arquivo${files.length !== 1 ? 's' : ''}`;
+
+    if (!files.length) {
+      document.getElementById('share-empty').style.display = 'block';
+      document.getElementById('share-files-table-wrap').style.display = 'none';
+    } else {
+      document.getElementById('share-empty').style.display = 'none';
+      document.getElementById('share-files-table-wrap').style.display = 'block';
+
+      const tbody = document.getElementById('share-files-tbody');
+      tbody.innerHTML = '';
+      for (const f of files) {
+        const url = supaPublicUrl('hiper-uploads', f.file_path);
+        const ext = getFileExt(f.name);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <div class="file-name-cell">
+              <span class="file-ext-badge">${esc(ext)}</span>
+              <span>${esc(f.name)}</span>
+            </div>
+          </td>
+          <td><span class="file-size">${formatBytes(f.size)}</span></td>
+          <td>
+            <div class="td-actions">
+              <a href="${url}" target="_blank" download="${esc(f.name)}">
+                <button class="btn btn-primary btn-sm">⬇ Download</button>
+              </a>
+            </div>
+          </td>`;
+        tbody.appendChild(row);
+      }
+
+      // Store for download all
+      window._shareFiles = files;
+    }
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DOWNLOAD ALL (ZIP)
+// ═══════════════════════════════════════════════════════════
+async function downloadAll() {
+  if (!currentFolder) return;
+  loading(true, 'Preparando ZIP...');
+  try {
+    const files = await supaQuery('files', `folder_id=eq.${currentFolder.id}`);
+    await buildZip(files, currentFolder.name);
+  } catch (e) {
+    toast('Erro ao gerar ZIP: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+async function shareDownloadAll() {
+  const files = window._shareFiles;
+  if (!files || !files.length) { toast('Sem arquivos para baixar', 'warning'); return; }
+  loading(true, 'Preparando ZIP...');
+  try {
+    await buildZip(files, 'hiper-uploads');
+  } catch (e) {
+    toast('Erro ao gerar ZIP: ' + e.message, 'error');
+  } finally { loading(false); }
+}
+
+async function buildZip(files, name) {
+  const zip = new JSZip();
+  toast(`Baixando ${files.length} arquivo(s)...`, 'info');
+
+  for (const f of files) {
+    const url = supaPublicUrl('hiper-uploads', f.file_path);
+    const resp = await fetch(url);
+    if (!resp.ok) continue;
+    const blob = await resp.blob();
+    zip.file(f.name, blob);
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(content);
+  a.download = `${name.replace(/[^a-zA-Z0-9]/g,'_')}.zip`;
+  a.click();
+  toast('ZIP gerado com sucesso!', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HANDLE HASH CHANGES (share links)
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('hashchange', () => {
+  if (location.hash.startsWith('#/share/')) {
+    const folderId = location.hash.replace('#/share/', '');
+    showSharePage(folderId);
+  }
+});
+</script>
+
+<!-- ════════════════════════ SQL SETUP GUIDE ════════════════════════ -->
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║               SUPABASE SETUP — Execute no SQL Editor                 ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+-- 1. TABELA FOLDERS
+CREATE TABLE folders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz
+);
+ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own folders" ON folders
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Public read folders" ON folders
+  FOR SELECT USING (true);
+
+-- 2. TABELA FILES
+CREATE TABLE files (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  folder_id uuid REFERENCES folders(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  file_path text NOT NULL,
+  size numeric,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz
+);
+ALTER TABLE files ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read files" ON files
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated insert files" ON files
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated delete files" ON files
+  FOR DELETE USING (auth.role() = 'authenticated');
+
+-- 3. STORAGE BUCKET
+-- Vá em Storage > New Bucket > nome: "hiper-uploads" > Public: ON
+
+-- 4. STORAGE POLICIES (cole no SQL Editor)
+INSERT INTO storage.buckets (id, name, public) VALUES ('hiper-uploads', 'hiper-uploads', true)
+  ON CONFLICT DO NOTHING;
+
+CREATE POLICY "Public read storage" ON storage.objects
+  FOR SELECT USING (bucket_id = 'hiper-uploads');
+CREATE POLICY "Auth upload storage" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'hiper-uploads' AND auth.role() = 'authenticated');
+CREATE POLICY "Auth delete storage" ON storage.objects
+  FOR DELETE USING (bucket_id = 'hiper-uploads' AND auth.role() = 'authenticated');
+-->
+
+</body>
+</html>
