@@ -437,7 +437,7 @@
         <label class="form-label">Senha</label>
         <input class="form-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleLogin()">
       </div>
-      <button class="btn btn-primary login-btn" onclick="handleLogin()">Entrar</button>
+      <button class="btn btn-primary w-100" onclick="handleLogin()">Entrar</button>
     </div>
   </div>
 </div>
@@ -918,17 +918,31 @@ function showApp() {
 async function handleLogin() {
   const user = document.getElementById('login-email').value.trim().toLowerCase();
   const pwd = document.getElementById('login-password').value;
-  if (!user || !pwd) { toast('Preencha usuário e senha', 'warning'); return; }
-  if (user !== 'suporte' || pwd !== 'hiper123') {
-    toast('Usuário ou senha incorretos', 'error');
-    document.getElementById('login-password').value = '';
-    return;
+
+  if (!user || !pwd) { 
+    if (typeof toast === 'function') toast('Preencha usuário e senha', 'warning'); 
+    return; 
   }
-  currentUser = { id: 'suporte', email: 'suporte' };
-  localStorage.setItem('hiper_session', '1');
-  localStorage.setItem('user_email', 'suporte');
-  toast('Bem-vindo ao Hiper Uploads!', 'success');
-  showApp();
+
+  // Validação fixa
+  if (user === 'suporte' && pwd === 'hiper123') {
+    // Definimos os dados que o resto do sistema espera
+    currentUser = { id: 'suporte', email: 'suporte' };
+    authToken = 'sessao-suporte-fixa';
+    
+    // Gravamos no navegador para ele lembrar que estamos logados
+    localStorage.setItem('auth_token', authToken);
+    localStorage.setItem('hiper_session', '1');
+    localStorage.setItem('user_email', 'suporte');
+
+    if (typeof toast === 'function') toast('Bem-vindo ao Hiper Uploads!', 'success');
+    
+    // Abre o aplicativo
+    showApp();
+  } else {
+    if (typeof toast === 'function') toast('Usuário ou senha incorretos', 'error');
+    document.getElementById('login-password').value = '';
+  }
 }
 
 async function handleLogout() {
