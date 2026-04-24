@@ -681,25 +681,21 @@
 const SUPA_URL = 'https://zgqovmtiyvoocowbznth.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncW92bXRpeXZvb2Nvd2J6bnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODk4MDgsImV4cCI6MjA5MjU2NTgwOH0.3Mnx6IuwRLjwU8B_3gakJD3VYWkWb0_gx8N8UM4Hdh0';
 
-// 2. VARIÁVEIS DE ESTADO
+// 2. VARIÁVEIS DE ESTADO (Sem duplicatas)
 let authToken = localStorage.getItem('auth_token') || null;
-let currentUser = null;
-let currentFolder = null;
-let fileToDelete = null;
 let currentUser = null;
 let currentFolder = null;
 let fileToDelete = null;
 
 // ─── Supabase helpers ───
 function supaHeaders(extra = {}) {
-  const key = localStorage.getItem('supa_key') || SUPA_KEY;
-  const h = {
+  // Agora usa sempre a SUPA_KEY fixa do código
+  return {
     'Content-Type': 'application/json',
-    'apikey': key,
-    'Authorization': `Bearer ${key}`,
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
     ...extra
   };
-  return h;
 }
 
 async function supaFetch(path, options = {}) {
@@ -781,16 +777,15 @@ async function supaSignOut() {
 
 // ─── Storage ───
 async function supaUpload(bucket, path, file, onProgress) {
-  const url = localStorage.getItem('supa_url') || SUPA_URL;
-  const key = localStorage.getItem('supa_key') || SUPA_KEY;
-  if (!url) throw new Error('SUPA_NOT_CONFIGURED');
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${url}/storage/v1/object/${bucket}/${path}`);
-    xhr.setRequestHeader('apikey', key);
-    xhr.setRequestHeader('Authorization', `Bearer ${key}`);
+    // Usa a SUPA_URL fixa
+    xhr.open('POST', `${SUPA_URL.replace(/\/$/, '')}/storage/v1/object/${bucket}/${path}`);
+    xhr.setRequestHeader('apikey', SUPA_KEY);
+    xhr.setRequestHeader('Authorization', `Bearer ${SUPA_KEY}`);
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
     xhr.setRequestHeader('x-upsert', 'true');
+    // ... resto do código do XHR (mantenha o que já tem abaixo disso)
     if (onProgress) {
       xhr.upload.addEventListener('progress', e => {
         if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
@@ -806,8 +801,7 @@ async function supaUpload(bucket, path, file, onProgress) {
 }
 
 function supaPublicUrl(bucket, path) {
-  const url = localStorage.getItem('supa_url') || SUPA_URL;
-  return `${url}/storage/v1/object/public/${bucket}/${path}`;
+  return `${SUPA_URL.replace(/\/$/, '')}/storage/v1/object/public/${bucket}/${path}`;
 }
 
 async function supaDeleteFile(bucket, path) {
@@ -919,29 +913,15 @@ async function handleLogin() {
   const user = document.getElementById('login-email').value.trim().toLowerCase();
   const pwd = document.getElementById('login-password').value;
 
-  if (!user || !pwd) { 
-    if (typeof toast === 'function') toast('Preencha usuário e senha', 'warning'); 
-    return; 
-  }
-
-  // Validação fixa
   if (user === 'suporte' && pwd === 'hiper123') {
-    // Definimos os dados que o resto do sistema espera
     currentUser = { id: 'suporte', email: 'suporte' };
-    authToken = 'sessao-suporte-fixa';
-    
-    // Gravamos no navegador para ele lembrar que estamos logados
-    localStorage.setItem('auth_token', authToken);
     localStorage.setItem('hiper_session', '1');
-    localStorage.setItem('user_email', 'suporte');
-
-    if (typeof toast === 'function') toast('Bem-vindo ao Hiper Uploads!', 'success');
+    localStorage.setItem('auth_token', 'sessao-fixa'); // Importante para o supaFetch
     
-    // Abre o aplicativo
+    toast('Bem-vindo!', 'success');
     showApp();
   } else {
-    if (typeof toast === 'function') toast('Usuário ou senha incorretos', 'error');
-    document.getElementById('login-password').value = '';
+    toast('Usuário ou senha incorretos', 'error');
   }
 }
 
