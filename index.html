@@ -677,12 +677,11 @@
 
 <!-- ════════════════════════ SCRIPT ════════════════════════ -->
 <script>
-// ═══════════════════════════════════════════════════════════
-//  SUPABASE CLIENT (DADOS FIXOS)
-// ═══════════════════════════════════════════════════════════
+// 1. DADOS TOTAIS E FIXOS DO SUPABASE
 const SUPA_URL = 'https://zgqovmtiyvoocowbznth.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncW92bXRpeXZvb2Nvd2J6bnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODk4MDgsImV4cCI6MjA5MjU2NTgwOH0.3Mnx6IuwRLjwU8B_3gakJD3VYWkWb0_gx8N8UM4Hdh0';
 
+// 2. VARIÁVEIS DE ESTADO
 let authToken = localStorage.getItem('auth_token') || null;
 let currentUser = null;
 let currentFolder = null;
@@ -704,7 +703,6 @@ function supaHeaders(extra = {}) {
 }
 
 async function supaFetch(path, options = {}) {
-  // Usa as constantes fixas do topo do arquivo
   const urlBase = SUPA_URL.replace(/\/$/, '');
   const cleanPath = path.startsWith('/') ? path : '/' + path;
   const fullUrl = urlBase + cleanPath;
@@ -899,16 +897,18 @@ function showLoginWithConfigPrompt() {
 }
 
 function showApp() {
-  // Esconde o login e mostra o app
+  // Esconde o login e mostra o sistema
+  document.getElementById('section-login').classList.remove('active');
   document.getElementById('section-login').style.display = 'none';
   document.getElementById('section-app').style.display = 'block';
-  document.getElementById('section-share').style.display = 'none';
+  document.getElementById('section-app').classList.add('active');
 
-  // Define o nome do usuário
   document.getElementById('user-email-display').textContent = 'suporte';
 
-  // Limpa qualquer aviso de configuração e carrega os dados direto
-  document.getElementById('config-notice').innerHTML = '';
+  // Força a limpeza de qualquer aviso e carrega o painel
+  const configNotice = document.getElementById('config-notice');
+  if (configNotice) configNotice.innerHTML = '';
+  
   loadDashboard();
 }
 
