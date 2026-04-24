@@ -677,8 +677,8 @@
 
 <!-- ════════════════════════ SCRIPT ════════════════════════ -->
 <script>
-// ═══════════════════════════════════════════════════════════
-//  SUPABASE CLIENT (lightweight fetch-based)
+const SUPA_URL = 'https://zgqovmtiyvoocowbznth.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncW92bXRpeXZvb2Nvd2J6bnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODk4MDgsImV4cCI6MjA5MjU2NTgwOH0.3Mnx6IuwRLjwU8B_3gakJD3VYWkWb0_gx8N8UM4Hdh0';//  SUPABASE CLIENT (lightweight fetch-based)
 // ═══════════════════════════════════════════════════════════
 let SUPA_URL = localStorage.getItem('supa_url') || '';
 let SUPA_KEY = localStorage.getItem('supa_key') || '';
@@ -700,27 +700,17 @@ function supaHeaders(extra = {}) {
 }
 
 async function supaFetch(path, options = {}) {
-  // 1. Tenta pegar as configurações
-  const urlBase = localStorage.getItem('supa_url') || SUPA_URL;
-  const key = localStorage.getItem('supa_key') || SUPA_KEY;
-
-  // 2. Se for uma tentativa de buscar dados do banco sem URL, aí sim avisamos
-  if (!path.includes('/auth/') && (!urlBase || !urlBase.startsWith('http'))) {
-    console.warn('Supabase não configurado ainda.');
-    throw new Error('SUPA_NOT_CONFIGURED');
-  }
-
-  // 3. Montagem segura da URL
-  const cleanUrl = urlBase ? urlBase.replace(/\/$/, '') : '';
+  // Ignora o localStorage e usa apenas as constantes acima
+  const urlBase = SUPA_URL.replace(/\/$/, '');
   const cleanPath = path.startsWith('/') ? path : '/' + path;
-  const fullUrl = cleanUrl + cleanPath;
+  const fullUrl = urlBase + cleanPath;
 
   const res = await fetch(fullUrl, {
     method: options.method || 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': key,
-      'Authorization': `Bearer ${key}`,
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${SUPA_KEY}`,
       ...options.headers
     },
     body: options.body
