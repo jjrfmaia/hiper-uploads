@@ -700,16 +700,36 @@ function supaHeaders(extra = {}) {
 }
 
 async function supaFetch(path, options = {}) {
-  const url = (localStorage.getItem('supa_url') || SUPA_URL) + path;
-  if (!url.startsWith('http')) throw new Error('SUPA_NOT_CONFIGURED');
-  const res = await fetch(url, {
-    headers: supaHeaders(options.headers || {}),
-    ...options
+  // 1. Pega os valores atualizados do localStorage na hora do clique
+  const urlBase = localStorage.getItem('supa_url') || SUPA_URL;
+  const key = localStorage.getItem('supa_key') || SUPA_KEY;
+
+  if (!urlBase || !urlBase.startsWith('http')) {
+    throw new Error('SUPA_NOT_CONFIGURED');
+  }
+
+  // 2. Garante que a URL termine sem barra e o path comece com barra
+  const cleanUrl = urlBase.replace(/\/$/, '');
+  const cleanPath = path.startsWith('/') ? path : '/' + path;
+  const fullUrl = cleanUrl + cleanPath;
+
+  // 3. Faz a requisição com os headers corretos
+  const res = await fetch(fullUrl, {
+    method: options.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': key,
+      'Authorization': `Bearer ${key}`,
+      ...options.headers
+    },
+    body: options.body
   });
+
   let data;
   try { data = await res.json(); } catch { data = {}; }
   if (!res.ok) throw new Error(data.message || data.error_description || data.msg || `HTTP ${res.status}`);
   return data;
+}
 }
 
 async function supaQuery(table, params = '') {
