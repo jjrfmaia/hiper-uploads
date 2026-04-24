@@ -700,20 +700,21 @@ function supaHeaders(extra = {}) {
 }
 
 async function supaFetch(path, options = {}) {
-  // 1. Pega os valores atualizados do localStorage na hora do clique
+  // 1. Tenta pegar as configurações
   const urlBase = localStorage.getItem('supa_url') || SUPA_URL;
   const key = localStorage.getItem('supa_key') || SUPA_KEY;
 
-  if (!urlBase || !urlBase.startsWith('http')) {
+  // 2. Se for uma tentativa de buscar dados do banco sem URL, aí sim avisamos
+  if (!path.includes('/auth/') && (!urlBase || !urlBase.startsWith('http'))) {
+    console.warn('Supabase não configurado ainda.');
     throw new Error('SUPA_NOT_CONFIGURED');
   }
 
-  // 2. Garante que a URL termine sem barra e o path comece com barra
-  const cleanUrl = urlBase.replace(/\/$/, '');
+  // 3. Montagem segura da URL
+  const cleanUrl = urlBase ? urlBase.replace(/\/$/, '') : '';
   const cleanPath = path.startsWith('/') ? path : '/' + path;
   const fullUrl = cleanUrl + cleanPath;
 
-  // 3. Faz a requisição com os headers corretos
   const res = await fetch(fullUrl, {
     method: options.method || 'GET',
     headers: {
@@ -727,9 +728,8 @@ async function supaFetch(path, options = {}) {
 
   let data;
   try { data = await res.json(); } catch { data = {}; }
-  if (!res.ok) throw new Error(data.message || data.error_description || data.msg || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
   return data;
-}
 }
 
 async function supaQuery(table, params = '') {
