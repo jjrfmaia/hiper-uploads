@@ -689,18 +689,19 @@ let fileToDelete = null;
 
 // ─── Supabase helpers ───
 function supaHeaders(extra = {}) {
+  const key = localStorage.getItem('supa_key') || SUPA_KEY;
   const h = {
     'Content-Type': 'application/json',
-    'apikey': SUPA_KEY,
-    'Authorization': `Bearer ${SUPA_KEY}`,
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
     ...extra
   };
   return h;
 }
 
 async function supaFetch(path, options = {}) {
-  if (!SUPA_URL) throw new Error('SUPA_NOT_CONFIGURED');
-  const url = SUPA_URL + path;
+  const url = (localStorage.getItem('supa_url') || SUPA_URL) + path;
+  if (!url.startsWith('http')) throw new Error('SUPA_NOT_CONFIGURED');
   const res = await fetch(url, {
     headers: supaHeaders(options.headers || {}),
     ...options
@@ -768,12 +769,14 @@ async function supaSignOut() {
 
 // ─── Storage ───
 async function supaUpload(bucket, path, file, onProgress) {
-  if (!SUPA_URL) throw new Error('SUPA_NOT_CONFIGURED');
+  const url = localStorage.getItem('supa_url') || SUPA_URL;
+  const key = localStorage.getItem('supa_key') || SUPA_KEY;
+  if (!url) throw new Error('SUPA_NOT_CONFIGURED');
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${SUPA_URL}/storage/v1/object/${bucket}/${path}`);
-    xhr.setRequestHeader('apikey', SUPA_KEY);
-    xhr.setRequestHeader('Authorization', `Bearer ${SUPA_KEY}`);
+    xhr.open('POST', `${url}/storage/v1/object/${bucket}/${path}`);
+    xhr.setRequestHeader('apikey', key);
+    xhr.setRequestHeader('Authorization', `Bearer ${key}`);
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
     xhr.setRequestHeader('x-upsert', 'true');
     if (onProgress) {
@@ -791,7 +794,8 @@ async function supaUpload(bucket, path, file, onProgress) {
 }
 
 function supaPublicUrl(bucket, path) {
-  return `${SUPA_URL}/storage/v1/object/public/${bucket}/${path}`;
+  const url = localStorage.getItem('supa_url') || SUPA_URL;
+  return `${url}/storage/v1/object/public/${bucket}/${path}`;
 }
 
 async function supaDeleteFile(bucket, path) {
